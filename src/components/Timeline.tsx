@@ -18,9 +18,16 @@ interface TimelineProps {
   onClipChange: (clips: TimelineClip[]) => void;
   clips: TimelineClip[];
   currentTime: number;
+  onTimeUpdate?: (time: number) => void;
 }
 
-const Timeline: React.FC<TimelineProps> = ({ duration, onClipChange, clips: initialClips, currentTime }) => {
+const Timeline: React.FC<TimelineProps> = ({ 
+  duration, 
+  onClipChange, 
+  clips: initialClips, 
+  currentTime,
+  onTimeUpdate 
+}) => {
   const [clips, setClips] = useState<TimelineClip[]>(initialClips.length > 0 ? initialClips : [
     {
       id: '1',
@@ -58,11 +65,6 @@ const Timeline: React.FC<TimelineProps> = ({ duration, onClipChange, clips: init
       ]);
     }
   }, [initialClips, duration]);
-
-  // Update currentTime from props
-  useEffect(() => {
-    setCurrentTime(currentTime);
-  }, [currentTime]);
 
   // Notify parent when clips change
   useEffect(() => {
@@ -203,7 +205,10 @@ const Timeline: React.FC<TimelineProps> = ({ duration, onClipChange, clips: init
     const percentage = clickPosition / rect.width;
     const newTime = percentage * duration;
     
-    setCurrentTime(newTime);
+    // Use the onTimeUpdate prop to notify the parent component
+    if (onTimeUpdate) {
+      onTimeUpdate(newTime);
+    }
   };
 
   // Format time as mm:ss

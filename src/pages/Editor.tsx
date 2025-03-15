@@ -256,6 +256,7 @@ const Editor: React.FC = () => {
                 onClipChange={handleClipChange}
                 clips={clips}
                 currentTime={currentTime}
+                onTimeUpdate={handleTimeUpdate} 
               />
             </div>
           )}
