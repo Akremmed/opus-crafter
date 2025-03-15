@@ -22,15 +22,26 @@ export const getYoutubeThumbnail = (videoId: string): string => {
   return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
 };
 
+// Convert YouTube video ID to embed URL
+export const getYoutubeEmbedUrl = (videoId: string): string => {
+  return `https://www.youtube.com/embed/${videoId}`;
+};
+
 // Mock function to simulate AI analysis of video for interesting parts
 export const analyzeVideoContent = async (
-  videoUrl: string,
+  youtubeUrl: string,
   onProgress?: (progress: number) => void
 ): Promise<{
   videoUrl: string;
   segments: VideoSegment[];
   duration: number;
 }> => {
+  // Extract the YouTube video ID
+  const videoId = extractYoutubeId(youtubeUrl);
+  if (!videoId) {
+    throw new Error("Invalid YouTube URL");
+  }
+
   // In a real implementation, this would connect to a backend service
   // that processes the YouTube video and returns interesting segments
 
@@ -74,14 +85,15 @@ export const analyzeVideoContent = async (
         }
       ];
       
-      // In a real app, we would download/proxy the video
-      // For now, just return the YouTube URL (it won't actually play due to embed restrictions)
+      // Generate YouTube embed URL
+      const embedUrl = getYoutubeEmbedUrl(videoId);
+      
       resolve({
-        videoUrl: videoUrl, // In a real app, this would be a local URL to the processed video
+        videoUrl: embedUrl, // Use YouTube embed URL which will play in the iframe
         segments: mockSegments,
         duration: mockDuration
       });
-    }, 5000); // Simulate 5 second processing time
+    }, 3000); // Reduced to 3 seconds for better UX
   });
 };
 

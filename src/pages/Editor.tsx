@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import Header from '@/components/Header';
@@ -14,6 +15,7 @@ import { Save, ArrowLeft, Youtube, Upload, Scissors } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { exportVideo } from '@/utils/videoUtils';
 import { analyzeVideoContent, segmentsToClips, VideoSegment, extractYoutubeId } from '@/utils/youtubeUtils';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface TimelineClip {
   id: string;
@@ -37,6 +39,7 @@ const Editor: React.FC = () => {
   const [exportProgress, setExportProgress] = useState(0);
   const [currentSubtitle, setCurrentSubtitle] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('upload');
+  const [showClipsHelp, setShowClipsHelp] = useState(false);
   const { toast } = useToast();
 
   // Video playback hooks
@@ -51,6 +54,14 @@ const Editor: React.FC = () => {
     setCurrentSubtitle(currentSegment?.transcript || null);
   }, [currentTime, segments]);
 
+  // When clips are generated, show a help message
+  useEffect(() => {
+    if (clips.length > 0 && !showClipsHelp) {
+      setShowClipsHelp(true);
+      setTimeout(() => setShowClipsHelp(false), 10000); // Hide after 10 seconds
+    }
+  }, [clips]);
+
   const handleVideoUploaded = (file: File, url: string) => {
     setVideoFile(file);
     setVideoUrl(url);
@@ -58,6 +69,7 @@ const Editor: React.FC = () => {
     setClips([]);
     setSegments([]);
     setCurrentSubtitle(null);
+    setShowClipsHelp(false);
   };
 
   const handleYoutubeImport = async (youtubeUrl: string) => {
@@ -216,6 +228,17 @@ const Editor: React.FC = () => {
             </div>
           )}
           
+          {/* Clip Help Alert */}
+          {showClipsHelp && clips.length > 0 && (
+            <Alert>
+              <AlertTitle>Clips Generated</AlertTitle>
+              <AlertDescription>
+                The AI has generated {clips.length} clips from the most interesting parts of your video.
+                You can adjust them on the timeline below or export them as shorts.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {/* Controls */}
           {videoUrl && (
             <Controls 
@@ -231,6 +254,8 @@ const Editor: React.FC = () => {
               <Timeline 
                 duration={duration} 
                 onClipChange={handleClipChange}
+                clips={clips}
+                currentTime={currentTime}
               />
             </div>
           )}
