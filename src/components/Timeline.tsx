@@ -16,10 +16,12 @@ interface TimelineClip {
 interface TimelineProps {
   duration: number;
   onClipChange: (clips: TimelineClip[]) => void;
+  clips: TimelineClip[];
+  currentTime: number;
 }
 
-const Timeline: React.FC<TimelineProps> = ({ duration, onClipChange }) => {
-  const [clips, setClips] = useState<TimelineClip[]>([
+const Timeline: React.FC<TimelineProps> = ({ duration, onClipChange, clips: initialClips, currentTime }) => {
+  const [clips, setClips] = useState<TimelineClip[]>(initialClips.length > 0 ? initialClips : [
     {
       id: '1',
       start: 0,
@@ -29,7 +31,6 @@ const Timeline: React.FC<TimelineProps> = ({ duration, onClipChange }) => {
       width: 100,
     },
   ]);
-  const [currentTime, setCurrentTime] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragType, setDragType] = useState<'move' | 'trim-left' | 'trim-right' | null>(null);
   const [activeClipId, setActiveClipId] = useState<string | null>(null);
@@ -40,9 +41,11 @@ const Timeline: React.FC<TimelineProps> = ({ duration, onClipChange }) => {
   const timelineRef = useRef<HTMLDivElement>(null);
   const playheadRef = useRef<HTMLDivElement>(null);
 
-  // Update clips when duration changes
+  // Update clips when initialClips or duration changes
   useEffect(() => {
-    if (duration > 0 && clips.length === 1) {
+    if (initialClips.length > 0) {
+      setClips(initialClips);
+    } else if (duration > 0) {
       setClips([
         {
           id: '1',
@@ -54,7 +57,12 @@ const Timeline: React.FC<TimelineProps> = ({ duration, onClipChange }) => {
         },
       ]);
     }
-  }, [duration]);
+  }, [initialClips, duration]);
+
+  // Update currentTime from props
+  useEffect(() => {
+    setCurrentTime(currentTime);
+  }, [currentTime]);
 
   // Notify parent when clips change
   useEffect(() => {
