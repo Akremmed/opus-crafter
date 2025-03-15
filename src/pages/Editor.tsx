@@ -1,20 +1,17 @@
+
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import Header from '@/components/Header';
-import VideoUploader from '@/components/VideoUploader';
-import VideoPlayer from '@/components/VideoPlayer';
-import Timeline from '@/components/Timeline';
-import Controls from '@/components/Controls';
-import Subtitles from '@/components/Subtitles';
-import YoutubeImport from '@/components/YoutubeImport';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Save, ArrowLeft, Youtube, Upload, Scissors } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { exportVideo } from '@/utils/videoUtils';
+import { ArrowLeft } from 'lucide-react';
 import { analyzeVideoContent, segmentsToClips, VideoSegment, extractYoutubeId } from '@/utils/youtubeUtils';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { exportVideo } from '@/utils/videoUtils';
+
+// Importing our new components
+import VideoSection from '@/components/VideoSection';
+import ClipManager from '@/components/ClipManager';
+import VideoSourceSelector from '@/components/VideoSourceSelector';
+import ExportProgress from '@/components/ExportProgress';
 
 interface TimelineClip {
   id: string;
@@ -37,7 +34,6 @@ const Editor: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [currentSubtitle, setCurrentSubtitle] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('upload');
   const [showClipsHelp, setShowClipsHelp] = useState(false);
   const { toast } = useToast();
 
@@ -150,10 +146,6 @@ const Editor: React.FC = () => {
     setClips(newClips);
   };
 
-  const handleSplitClick = () => {
-    // The Timeline component will handle the actual splitting logic
-  };
-
   const handleExportClick = async () => {
     if (!videoUrl || clips.length === 0) return;
     
@@ -204,93 +196,41 @@ const Editor: React.FC = () => {
         </div>
         
         <div className="grid grid-cols-1 gap-6">
-          {/* Tabs for Upload or YouTube Import */}
-          {!videoUrl && (
-            <div className="glass-card p-4">
-              <Tabs defaultValue="upload" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-2 mb-4">
-                  <TabsTrigger value="upload" className="flex items-center gap-2">
-                    <Upload className="h-4 w-4" />
-                    Upload Video
-                  </TabsTrigger>
-                  <TabsTrigger value="youtube" className="flex items-center gap-2">
-                    <Youtube className="h-4 w-4" />
-                    YouTube Import
-                  </TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="upload">
-                  <VideoUploader onVideoUploaded={handleVideoUploaded} />
-                </TabsContent>
-                
-                <TabsContent value="youtube">
-                  <YoutubeImport 
-                    onVideoImported={handleYoutubeImport}
-                    isProcessing={isProcessing}
-                  />
-                </TabsContent>
-              </Tabs>
-            </div>
-          )}
+          {/* Video Source Selector */}
+          <VideoSourceSelector 
+            videoUrl={videoUrl}
+            onVideoUploaded={handleVideoUploaded}
+            onYoutubeImport={handleYoutubeImport}
+            isProcessing={isProcessing}
+            exportProgress={exportProgress}
+          />
           
-          {/* Video Player or Uploader */}
-          {videoUrl && (
-            <div className="glass-card p-4 overflow-hidden relative">
-              <VideoPlayer 
-                src={videoUrl}
-                currentTime={currentTime}
-                onTimeUpdate={handleTimeUpdate}
-                onDurationChange={handleDurationChange}
-              />
-              <Subtitles text={currentSubtitle} isVisible={!!currentSubtitle} />
-            </div>
-          )}
+          {/* Video Player */}
+          <VideoSection 
+            videoUrl={videoUrl}
+            currentTime={currentTime}
+            onTimeUpdate={handleTimeUpdate}
+            onDurationChange={handleDurationChange}
+            currentSubtitle={currentSubtitle}
+          />
           
-          {/* Clip Help Alert */}
-          {showClipsHelp && clips.length > 0 && (
-            <Alert>
-              <AlertTitle>Clips Generated</AlertTitle>
-              <AlertDescription>
-                The AI has generated {clips.length} clips from the most interesting parts of your video.
-                You can adjust them on the timeline below or export them as shorts.
-              </AlertDescription>
-            </Alert>
-          )}
+          {/* Clip Manager */}
+          <ClipManager 
+            videoUrl={videoUrl}
+            duration={duration}
+            currentTime={currentTime}
+            clips={clips}
+            onClipChange={handleClipChange}
+            onTimeUpdate={handleTimeUpdate}
+            onExport={handleExportClick}
+            showClipsHelp={showClipsHelp}
+          />
           
-          {/* Controls */}
-          {videoUrl && (
-            <Controls 
-              onSplit={handleSplitClick}
-              onExport={handleExportClick}
-              hasVideo={!!videoUrl}
-            />
-          )}
-          
-          {/* Timeline */}
-          {videoUrl && (
-            <div className="glass-card p-4">
-              <Timeline 
-                duration={duration} 
-                onClipChange={handleClipChange}
-                clips={clips}
-                currentTime={currentTime}
-                onTimeUpdate={handleTimeUpdate} 
-              />
-            </div>
-          )}
-          
-          {/* Processing or Export Progress */}
-          {(isProcessing || isExporting) && (
-            <div className="glass-card p-4 animate-fade-in">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-medium">
-                  {isProcessing ? "Processing YouTube Video..." : "Exporting Video..."}
-                </h3>
-                <span className="text-sm text-muted-foreground">{exportProgress}%</span>
-              </div>
-              <Progress value={exportProgress} className="h-2" />
-            </div>
-          )}
+          {/* Export Progress */}
+          <ExportProgress 
+            isExporting={isExporting}
+            exportProgress={exportProgress}
+          />
         </div>
       </main>
     </div>
