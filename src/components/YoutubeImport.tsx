@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { YoutubeIcon } from 'lucide-react';
+import { extractYoutubeId } from '@/utils/youtubeUtils';
 
 interface YoutubeImportProps {
   onVideoImported: (videoUrl: string) => void;
@@ -19,9 +20,9 @@ const YoutubeImport: React.FC<YoutubeImportProps> = ({
   const { toast } = useToast();
 
   const validateYoutubeUrl = (url: string) => {
-    // Simple validation for YouTube URLs
-    const regex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})$/;
-    return regex.test(url);
+    // Check if we can extract a valid YouTube ID
+    const videoId = extractYoutubeId(url);
+    return videoId !== null;
   };
 
   const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {

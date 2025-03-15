@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import Header from '@/components/Header';
@@ -14,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Save, ArrowLeft, Youtube, Upload, Scissors } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { exportVideo } from '@/utils/videoUtils';
-import { analyzeVideoContent, segmentsToClips, VideoSegment } from '@/utils/youtubeUtils';
+import { analyzeVideoContent, segmentsToClips, VideoSegment, extractYoutubeId } from '@/utils/youtubeUtils';
 
 interface TimelineClip {
   id: string;
@@ -63,12 +62,21 @@ const Editor: React.FC = () => {
 
   const handleYoutubeImport = async (youtubeUrl: string) => {
     setIsProcessing(true);
+    setExportProgress(0);
     
     try {
       toast({
         title: "Processing YouTube Video",
         description: "Analyzing content and extracting interesting segments...",
       });
+      
+      // Validate the YouTube URL once more before processing
+      const videoId = extractYoutubeId(youtubeUrl);
+      if (!videoId) {
+        throw new Error("Invalid YouTube URL");
+      }
+      
+      console.log("Processing YouTube video with ID:", videoId);
       
       // Process the YouTube video
       const result = await analyzeVideoContent(youtubeUrl, (progress) => {
@@ -88,13 +96,15 @@ const Editor: React.FC = () => {
         description: `Found ${result.segments.length} interesting segments for shorts`,
       });
     } catch (error) {
+      console.error("YouTube import error:", error);
       toast({
         title: "Processing Failed",
-        description: "There was an error processing the YouTube video.",
+        description: error instanceof Error ? error.message : "There was an error processing the YouTube video.",
         variant: "destructive",
       });
     } finally {
       setIsProcessing(false);
+      setExportProgress(0);
     }
   };
 
