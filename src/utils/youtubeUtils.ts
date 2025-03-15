@@ -12,9 +12,10 @@ export interface VideoSegment {
 
 // Function to extract video ID from YouTube URL
 export const extractYoutubeId = (url: string): string | null => {
-  const regex = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  // Handle both standard and shortened URLs
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
   const match = url.match(regex);
-  return (match && match[2].length === 11) ? match[2] : null;
+  return match ? match[1] : null;
 };
 
 // Generate a thumbnail URL from YouTube video ID
@@ -24,7 +25,7 @@ export const getYoutubeThumbnail = (videoId: string): string => {
 
 // Convert YouTube video ID to embed URL
 export const getYoutubeEmbedUrl = (videoId: string): string => {
-  return `https://www.youtube.com/embed/${videoId}`;
+  return `https://www.youtube.com/embed/${videoId}?enablejsapi=1`;
 };
 
 // Mock function to simulate AI analysis of video for interesting parts
@@ -41,6 +42,8 @@ export const analyzeVideoContent = async (
   if (!videoId) {
     throw new Error("Invalid YouTube URL");
   }
+
+  console.log("Processing YouTube video with ID:", videoId);
 
   // In a real implementation, this would connect to a backend service
   // that processes the YouTube video and returns interesting segments
@@ -89,16 +92,29 @@ export const analyzeVideoContent = async (
       const embedUrl = getYoutubeEmbedUrl(videoId);
       
       resolve({
-        videoUrl: embedUrl, // Use YouTube embed URL which will play in the iframe
+        videoUrl: embedUrl,
         segments: mockSegments,
         duration: mockDuration
       });
-    }, 3000); // Reduced to 3 seconds for better UX
+    }, 3000);
   });
 };
 
 // Process segments into timeline clips that can be used in the editor
 export const segmentsToClips = (segments: VideoSegment[], duration: number) => {
+  if (!segments || segments.length === 0) {
+    // Return a default clip if no segments are provided
+    return [{
+      id: generateId(),
+      start: 0,
+      end: duration,
+      duration: duration,
+      left: 0,
+      width: 100,
+      transcript: ""
+    }];
+  }
+
   return segments.map(segment => {
     const left = (segment.start / duration) * 100;
     const width = ((segment.end - segment.start) / duration) * 100;

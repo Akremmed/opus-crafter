@@ -50,7 +50,7 @@ const YoutubeImport: React.FC<YoutubeImportProps> = ({
       <div className="flex flex-col sm:flex-row gap-2">
         <div className="relative flex-grow">
           <Input
-            placeholder="Paste YouTube video URL here"
+            placeholder="Paste YouTube video URL here (e.g., https://www.youtube.com/watch?v=dQw4w9WgXcQ)"
             value={youtubeUrl}
             onChange={handleUrlChange}
             className="pr-10 pl-4"
@@ -67,7 +67,8 @@ const YoutubeImport: React.FC<YoutubeImportProps> = ({
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Import a YouTube video to automatically create shorts from the most interesting parts
+        Import a YouTube video to automatically create shorts from the most interesting parts. 
+        Supports standard YouTube URLs (youtube.com/watch?v=...) and shortened URLs (youtu.be/...).
       </p>
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import Header from '@/components/Header';
@@ -70,6 +69,9 @@ const Editor: React.FC = () => {
     setSegments([]);
     setCurrentSubtitle(null);
     setShowClipsHelp(false);
+    
+    // Set default clip for the entire duration (will be updated when duration is known)
+    setDuration(0); // Will be updated by the video player
   };
 
   const handleYoutubeImport = async (youtubeUrl: string) => {
@@ -95,17 +97,20 @@ const Editor: React.FC = () => {
         setExportProgress(progress);
       });
       
+      // Update video information
       setVideoUrl(result.videoUrl);
       setDuration(result.duration);
       setSegments(result.segments);
       
       // Convert segments to timeline clips
       const timelineClips = segmentsToClips(result.segments, result.duration);
+      console.log("Generated clips:", timelineClips);
       setClips(timelineClips);
       
       toast({
         title: "Video Processed Successfully",
         description: `Found ${result.segments.length} interesting segments for shorts`,
+        variant: "default",
       });
     } catch (error) {
       console.error("YouTube import error:", error);
@@ -126,6 +131,19 @@ const Editor: React.FC = () => {
 
   const handleDurationChange = (newDuration: number) => {
     setDuration(newDuration);
+    
+    // If no clips have been created yet, create a default clip for the full duration
+    if (clips.length === 0 && newDuration > 0) {
+      const defaultClip = {
+        id: '1',
+        start: 0,
+        end: newDuration,
+        duration: newDuration,
+        left: 0,
+        width: 100,
+      };
+      setClips([defaultClip]);
+    }
   };
 
   const handleClipChange = (newClips: TimelineClip[]) => {
